@@ -1,10 +1,14 @@
 package zulip_test
 
 import (
+	"bytes"
 	"encoding/base64"
-	"fmt"
+	"errors"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	mocks "github.com/two-first-names/zulip-notify/mocks/pkg/zulip"
 	. "github.com/two-first-names/zulip-notify/pkg/zulip"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -29,11 +33,30 @@ func TestClient_SendStreamMessage(t *testing.T) {
 	auth := "test@foo.com:password"
 	req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)))
 
-	call := httpClient.On("Do", req).Return(nil, nil)
+	json := `{"id": 1, "msg": "", "result": "success"}`
+	res := &http.Response{
+		StatusCode: 200,
+		Body: io.NopCloser(bytes.NewReader([]byte(json))),
+	}
 
-	_ = client.SendStreamMessage("This is a test message", "test-stream", "test-topic")
+	httpClient.On("Do", req).Return(res, nil)
 
-	fmt.Printf("%+v\n", call)
+	err = client.SendStreamMessage("This is a test message", "test-stream", "test-topic")
+
+	require.Nil(t, err, "SendTopicMessage should not return an error")
 
 	httpClient.AssertExpectations(t)
+}
+
+func TestClient_SendStreamMessage_HttpClientError(t *testing.T) {
+	httpClient := &mocks.HttpClient{}
+	client := NewClient("http://localhost:8080", "test@foo.com", "password", httpClient)
+
+	e := errors.New("this is a http client error")
+
+	httpClient.On("Do", mock.Anything).Return(nil, e)
+
+	err := client.SendStreamMessage("This is a test message", "test-stream", "test-topic")
+
+	require.Equal(t, e, err)
 }

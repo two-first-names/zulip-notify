@@ -52,6 +52,9 @@ func (c *client) SendStreamMessage(content string, stream string, topic string) 
 	req.Header.Add("Authorization", "Basic " + c.auth())
 
 	_, err = c.httpClient.Do(req)
+	if err != nil {
+		return
+	}
 
 	return
 }
