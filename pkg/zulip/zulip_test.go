@@ -31,12 +31,12 @@ func TestClient_SendStreamMessage(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 
 	auth := "test@foo.com:password"
-	req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)))
+	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
 
 	json := `{"id": 1, "msg": "", "result": "success"}`
 	res := &http.Response{
 		StatusCode: 200,
-		Body: io.NopCloser(bytes.NewReader([]byte(json))),
+		Body:       io.NopCloser(bytes.NewReader([]byte(json))),
 	}
 
 	httpClient.On("Do", req).Return(res, nil)
@@ -72,7 +72,7 @@ func TestClient_SendStreamMessage_ServiceError(t *testing.T) {
 	json := `{"code": "STREAM_DOES_NOT_EXIST", "msg": "Stream 'nonexistent_stream' does not exist", "result": "error", "stream": "nonexistent_stream"}`
 	res := &http.Response{
 		StatusCode: 200,
-		Body: io.NopCloser(bytes.NewReader([]byte(json))),
+		Body:       io.NopCloser(bytes.NewReader([]byte(json))),
 	}
 
 	httpClient.On("Do", mock.Anything).Return(res, nil)

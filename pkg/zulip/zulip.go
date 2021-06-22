@@ -19,17 +19,17 @@ type Client interface {
 
 type client struct {
 	baseUrl string
-	token string
-	email string
+	token   string
+	email   string
 
 	httpClient HttpClient
 }
 
 func NewClient(baseUrl string, email string, token string, httpClient HttpClient) Client {
 	return &client{
-		baseUrl: baseUrl,
-		email: email,
-		token: token,
+		baseUrl:    baseUrl,
+		email:      email,
+		token:      token,
 		httpClient: httpClient,
 	}
 }
@@ -46,7 +46,7 @@ type sendMessageResponse struct {
 }
 
 func (c *client) SendStreamMessage(content string, stream string, topic string) (err error) {
-	req, err := http.NewRequest(http.MethodPost, c.baseUrl + "/api/v1/messages", nil)
+	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/api/v1/messages", nil)
 	if err != nil {
 		return
 	}
@@ -58,7 +58,7 @@ func (c *client) SendStreamMessage(content string, stream string, topic string) 
 	q.Add("content", content)
 	req.URL.RawQuery = q.Encode()
 
-	req.Header.Add("Authorization", "Basic " + c.auth())
+	req.Header.Add("Authorization", "Basic "+c.auth())
 
 	res, err := c.httpClient.Do(req)
 	if err != nil {
