@@ -59,4 +59,27 @@ func TestClient_SendStreamMessage_HttpClientError(t *testing.T) {
 	err := client.SendStreamMessage("This is a test message", "test-stream", "test-topic")
 
 	require.Equal(t, e, err)
+
+	httpClient.AssertExpectations(t)
+}
+
+func TestClient_SendStreamMessage_ServiceError(t *testing.T) {
+	httpClient := &mocks.HttpClient{}
+	client := NewClient("http://localhost:8080", "test@foo.com", "password", httpClient)
+
+	e := errors.New("zulip error: Stream 'nonexistent_stream' does not exist")
+
+	json := `{"code": "STREAM_DOES_NOT_EXIST", "msg": "Stream 'nonexistent_stream' does not exist", "result": "error", "stream": "nonexistent_stream"}`
+	res := &http.Response{
+		StatusCode: 200,
+		Body: io.NopCloser(bytes.NewReader([]byte(json))),
+	}
+
+	httpClient.On("Do", mock.Anything).Return(res, nil)
+
+	err := client.SendStreamMessage("This is a test message", "nonexistent_stream", "test-topic")
+
+	require.Equal(t, e, err)
+
+	httpClient.AssertExpectations(t)
 }
