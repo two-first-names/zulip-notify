@@ -1,15 +1,20 @@
 package main
 
 import (
+	"crypto/tls"
 	"github.com/two-first-names/zulip-notify/pkg/notify"
 	"github.com/two-first-names/zulip-notify/pkg/zulip"
+	"io"
 	"log"
 	"net/http"
 	"os"
 )
 
 func main() {
-	httpClient := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	httpClient := &http.Client{Transport: tr}
 	zulipClient := zulip.NewClient(
 		os.Getenv("ZULIP_ENDPOINT"),
 		os.Getenv("ZULIP_EMAIL"),
@@ -21,8 +26,18 @@ func main() {
 		os.Getenv("ZULIP_TOPIC"),
 		zulipClient)
 
-	err := notifier.SendMessage("This is a test message!")
+	filename := os.Getenv("CONTENT_FILE")
+	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panicln(err)
+	}
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	err = notifier.SendMessage(string(content))
+	if err != nil {
+		log.Panicln(err)
 	}
 }
